@@ -8,8 +8,8 @@ include azlin/mk/packages.mk
 # dirs
 
 GZ = $(HOME)/gz
-SRC = $(HOME)/src
 TMP = /tmp/$(USER)
+SRC = $(TMP)/src
 BIN = $(HOME)/bin
 LIB = $(HOME)/lib
 
@@ -26,8 +26,11 @@ include azlin/mk/src.mk
 XPATH = PATH=$(HOME)/bin:$(PATH)
 CPU_CORES ?= $(shell grep processor /proc/cpuinfo |wc -l) 
 
-# optimization for Xeon X5570
-BOPT = -mtune=barcelona -ffast-math -O3 -msse4.2
+# optimization
+## build system 
+BOPT = -O2 -g0
+## target system: Xeon X5570
+TOPT = -mtune=barcelona -ffast-math -O3 -msse4.2
 
 MAKE = $(XPATH) make -j$(CPU_CORES)
 
@@ -38,19 +41,16 @@ MAKE = $(XPATH) make -j$(CPU_CORES)
 .PHONY: cross
 cross: binutils
 
+CFG_BINUTILS = 
 .PHONY: binutils
-binutils:
+binutils: $(SRC)/$(BINUTILS)/README
 
 BLAS_CFG = \
 	FORTRAN=gfortran OPTS="$(BOPT)" \
 	BLASLIB=$(LIB)/libblas.a
-	
 .PHONY: blas
 blas: $(SRC)/$(BLAS)/README
 	cd $(SRC)/$(BLAS) &&\
 	touch make.inc &&\
 	make clean &&\
 	$(MAKE) $(BLAS_CFG)
-#	echo $(FORTRAN) $(F77FLAGS) -o $(LIB)/libblas.a
-#	 $(SRC)/$(BLAS)/*.f
- 

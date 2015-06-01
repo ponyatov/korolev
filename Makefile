@@ -68,7 +68,13 @@ TCFG = $(CFG) --prefix=$(ROOT) \
 ## most new cross
 
 .PHONY: cross
-cross: cclibs binutils
+cross: cclibs binutils gcc
+
+.PHONY: cross_clean
+cross_clean: cclibs_clean
+	rm -rf $(SRC)/$(BINUTILS) $(TMP)/$(BINUTILS)
+	rm -rf $(SRC)/$(GCC) $(TMP)/$(GCC)
+	rm -rf $(TMP)/doc
 
 ### libs required for binutils/gcc build
 
@@ -78,6 +84,14 @@ CCLIBS_CFG_WITH = --with-gmp=$(TC) --with-mpfr=$(TC) --with-mpc=$(TC) \
 CCLIBS_CFG = $(CCLIBS_CFG_ALL) $(CCLIBS_CFG_WITH) 
 .PHONY: cclibs
 cclibs: gmp mpfr mpc cloog isl
+
+.PHONY: cclibs_clean
+cclibs_clean:
+	rm -rf $(SRC)/$(GMP) $(TMP)/$(GMP)
+	rm -rf $(SRC)/$(MPFR) $(TMP)/$(MPFR)
+	rm -rf $(SRC)/$(MPC) $(TMP)/$(MPC)
+	rm -rf $(SRC)/$(CLOOG) $(TMP)/$(CLOOG)
+	rm -rf $(SRC)/$(ISL) $(TMP)/$(ISL)
 
 GMP_CFG = $(CCLIBS_CFG)
 .PHONY: gmp
@@ -110,13 +124,37 @@ isl: $(SRC)/$(ISL)/README
 	$(SRC)/$(ISL)/$(BCFG) $(ISL_CFG) && $(MAKE) && $(INSTALL)-strip
 
 
-CFG_BINUTILS = $(CCLIBS_CFG_WITH) --target=$(TARGET) --disable-bootstrap
+BINUTILS_CFG = $(CCLIBS_CFG_WITH) --target=$(TARGET) --disable-bootstrap
 .PHONY: binutils
 binutils: $(SRC)/$(BINUTILS)/README
 	rm -rf $(TMP)/$(BINUTILS) && mkdir $(TMP)/$(BINUTILS) &&\
 	cd $(TMP)/$(BINUTILS) &&\
-	$(SRC)/$(BINUTILS)/$(BCFG) $(CFG_BINUTILS) &&\
+	$(SRC)/$(BINUTILS)/$(BCFG) $(BINUTILS_CFG) &&\
 	$(MAKE) && $(INSTALL)-strip
+
+.PHONY: gccall
+gccall:
+	cd $(TMP)/$(GCC) && $(MAKE) all-gcc
+	cd $(TMP)/$(GCC) && $(MAKE) install-gcc
+	cd $(TMP)/$(GCC) && $(MAKE) all-target-libgcc
+	cd $(TMP)/$(GCC) && $(MAKE) install-target-libgcc
+
+.PHONY: gccpp
+gccpp:
+	make gccall
+	cd $(TMP)/$(GCC) && $(MAKE) all-target-libstdc++-v3
+	cd $(TMP)/$(GCC) && $(MAKE) install-target-libstdc++-v3
+
+GCC_CFG = $(BINUTILS_CFG)	
+.PHONY: gccf
+gccf: $(SRC)/$(GCC)/README
+	rm -rf $(TMP)/$(GCC) && mkdir $(TMP)/$(GCC) && cd $(TMP)/$(GCC) &&\
+	$(SRC)/$(GCC)/$(BCFG) $(GCC_CFG) --enable-languages="c,c++,fortran"
+	make gccpp
+	cd $(TMP)/$(GCC) && $(MAKE) all-target-libgfortran
+	cd $(TMP)/$(GCC) && $(MAKE) install-target-libgfortran
+	
+# app libs
 
 BLAS_CFG = \
 	FORTRAN=gfortran OPTS="$(BOPT)" \

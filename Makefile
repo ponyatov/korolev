@@ -13,8 +13,8 @@ include azlin/mk/packages.mk
 # dirs
 
 GZ = $(HOME)/gz
-TMP = /tmp/$(USER)
-SRC = $(TMP)/src
+TMP = $(HOME)/tmp
+SRC = $(HOME)/src
 BIN = $(HOME)/bin
 LIB = $(HOME)/lib
 TC = $(TMP)/build
@@ -71,7 +71,7 @@ TCFG = $(CFG) --prefix=$(ROOT) \
 cross: cclibs binutils gcc
 
 .PHONY: cross_clean
-cross_clean: cclibs_clean
+cross_clean:
 	rm -rf $(SRC)/$(BINUTILS) $(TMP)/$(BINUTILS)
 	rm -rf $(SRC)/$(GCC) $(TMP)/$(GCC)
 	rm -rf $(TMP)/doc
@@ -83,7 +83,9 @@ CCLIBS_CFG_WITH = --with-gmp=$(TC) --with-mpfr=$(TC) --with-mpc=$(TC) \
 	--with-isl=$(TC) --with-cloog=$(TC)
 CCLIBS_CFG = $(CCLIBS_CFG_ALL) $(CCLIBS_CFG_WITH) 
 .PHONY: cclibs
-cclibs: gmp mpfr mpc cloog isl
+cclibs: 
+	make gmp mpfr mpc cloog isl
+	make cclibs_clean
 
 .PHONY: cclibs_clean
 cclibs_clean:

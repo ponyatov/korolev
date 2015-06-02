@@ -71,7 +71,7 @@ TCFG = $(CFG) --prefix=$(ROOT) \
 cross: 
 	make cclibs
 	make binutils
-	make gcc
+	make gccf
 #	make cross_clean
 
 .PHONY: cross_clean
@@ -151,8 +151,7 @@ gccpp:
 	cd $(TMP)/$(GCC) && $(MAKE) all-target-libstdc++-v3
 	cd $(TMP)/$(GCC) && $(MAKE) install-target-libstdc++-v3
 
-GCC_CFG = $(BINUTILS_CFG)
-# --enable-threads --enable-libgomp
+GCC_CFG = $(BINUTILS_CFG) --enable-libgomp
 
 .PHONY: gcc
 gcc: $(SRC)/$(GCC)/README
@@ -182,7 +181,7 @@ blas: $(SRC)/$(BLAS)/README
 
 # apps
 
-OCTAVE_CFG =
+OCTAVE_CFG = 
 .PHONY: octave
 octave: $(SRC)/$(OCTAVE)/README
 	rm -rf $(TMP)/$(OCTAVE) && mkdir $(TMP)/$(OCTAVE) && cd $(TMP)/$(OCTAVE) &&\

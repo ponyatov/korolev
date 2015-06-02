@@ -1,5 +1,5 @@
 
-TARGET = $(shell gcc -dumpmachine) 
+TARGET = $(shell gcc -dumpmachine)
 
 .PHONY: none
 none:
@@ -28,7 +28,7 @@ dirs:
 	
 # commands
 
-XPATH = PATH=$(HOME)/bin:$(PATH)
+XPATH = PATH=$(TC)/bin:$(PATH)
 CPU_CORES ?= $(shell grep processor /proc/cpuinfo |wc -l) 
 
 MAKE = $(XPATH) make -j$(CPU_CORES)
@@ -68,7 +68,11 @@ TCFG = $(CFG) --prefix=$(ROOT) \
 ## most new cross
 
 .PHONY: cross
-cross: cclibs binutils gcc
+cross: 
+	make cclibs
+	make binutils
+	make gcc
+#	make cross_clean
 
 .PHONY: cross_clean
 cross_clean:
@@ -126,7 +130,7 @@ isl: $(SRC)/$(ISL)/README
 	$(SRC)/$(ISL)/$(BCFG) $(ISL_CFG) && $(MAKE) && $(INSTALL)-strip
 
 
-BINUTILS_CFG = $(CCLIBS_CFG_WITH) --target=$(TARGET) --disable-bootstrap
+BINUTILS_CFG = $(CCLIBS_CFG_WITH) --disable-bootstrap --program-prefix=$(TARGET)-
 .PHONY: binutils
 binutils: $(SRC)/$(BINUTILS)/README
 	rm -rf $(TMP)/$(BINUTILS) && mkdir $(TMP)/$(BINUTILS) &&\
@@ -147,7 +151,15 @@ gccpp:
 	cd $(TMP)/$(GCC) && $(MAKE) all-target-libstdc++-v3
 	cd $(TMP)/$(GCC) && $(MAKE) install-target-libstdc++-v3
 
-GCC_CFG = $(BINUTILS_CFG)	
+GCC_CFG = $(BINUTILS_CFG)
+# --enable-threads --enable-libgomp
+
+.PHONY: gcc
+gcc: $(SRC)/$(GCC)/README
+	rm -rf $(TMP)/$(GCC) && mkdir $(TMP)/$(GCC) && cd $(TMP)/$(GCC) &&\
+	$(SRC)/$(GCC)/$(BCFG) $(GCC_CFG) --enable-languages="c"
+	make gccall
+	
 .PHONY: gccf
 gccf: $(SRC)/$(GCC)/README
 	rm -rf $(TMP)/$(GCC) && mkdir $(TMP)/$(GCC) && cd $(TMP)/$(GCC) &&\
@@ -167,3 +179,11 @@ blas: $(SRC)/$(BLAS)/README
 	touch make.inc &&\
 	make clean &&\
 	$(MAKE) $(BLAS_CFG)
+
+# apps
+
+OCTAVE_CFG =
+.PHONY: octave
+octave: $(SRC)/$(OCTAVE)/README
+	rm -rf $(TMP)/$(OCTAVE) && mkdir $(TMP)/$(OCTAVE) && cd $(TMP)/$(OCTAVE) &&\
+	$(XPATH) $(SRC)/$(OCTAVE)/$(TCFG) $(OCTAVE_CFG)

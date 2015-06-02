@@ -15,8 +15,8 @@ include azlin/mk/packages.mk
 GZ = $(HOME)/gz
 TMP = $(HOME)/tmp
 SRC = $(HOME)/src
-BIN = $(HOME)/bin
-LIB = $(HOME)/lib
+BIN = $(ROOT)/bin
+LIB = $(ROOT)/lib
 TC = $(TMP)/build
 ROOT = $(TMP)/target
 
@@ -38,6 +38,11 @@ WGET = -wget -N -P $(GZ)
 
 BCC = gcc -pipe
 BXX = g++ -pipe
+TCC = $(TARGET)-gcc
+TXX = $(TARGET)-g++
+TFF = $(TARGET)-gfortran
+TARCH = $(TARGET)-ar
+TRL = $(TARGET)-ranlib
 
 # sources
 
@@ -61,7 +66,10 @@ BCFG = $(CFG) --prefix=$(TC) \
 	CC="$(BCC)" CXX="$(BXX)" CFLAGS="$(BOPT)" CXXFLAGS="$(BOPT)"
 
 TCFG = $(CFG) --prefix=$(ROOT) \
-	CC="$(TCC)" CXX="$(TXX)" CFLAGS="$(TOPT)" CXXFLAGS="$(TOPT)"
+	CC="$(TCC)" CXX="$(TXX)" \
+	CFLAGS="$(TOPT) -L$(LIB)" \
+	CXXFLAGS="$(TOPT) -L$(LIB)" \
+	LDFLAGS="-L$(LIB)"
 
 # packages
 
@@ -72,7 +80,7 @@ cross:
 	make cclibs
 	make binutils
 	make gccf
-#	make cross_clean
+	make cross_clean
 
 .PHONY: cross_clean
 cross_clean:
@@ -169,19 +177,17 @@ gccf: $(SRC)/$(GCC)/README
 	
 # app libs
 
-BLAS_CFG = \
-	FORTRAN=gfortran OPTS="$(BOPT)" \
-	BLASLIB=$(LIB)/libblas.a
+BLAS_CFG = FORTRAN=$(TFF) OPTS="$(TOPT)" ARCH=$(TARCH) RANLIB=$(TRL) \
+	BLASLIB=$(TC)/lib/libblas.a
 .PHONY: blas
 blas: $(SRC)/$(BLAS)/README
-	cd $(SRC)/$(BLAS) &&\
-	touch make.inc &&\
-	make clean &&\
-	$(MAKE) $(BLAS_CFG)
+	cd $(SRC)/$(BLAS) && touch make.inc && $(MAKE) $(BLAS_CFG)
 
 # apps
 
-OCTAVE_CFG = 
+OCTAVE_CFG = \
+	--disable-docs --disable-java \
+	--with-blas="-lblas" --with-lapack="-llapack"
 .PHONY: octave
 octave: $(SRC)/$(OCTAVE)/README
 	rm -rf $(TMP)/$(OCTAVE) && mkdir $(TMP)/$(OCTAVE) && cd $(TMP)/$(OCTAVE) &&\
